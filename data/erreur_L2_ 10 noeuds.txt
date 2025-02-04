@@ -1,2 +1,0 @@
-Erreur de discrétisation (norme L2) : 6.140605e-01 
-Nombre de noeuds : 10 
