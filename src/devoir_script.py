@@ -74,5 +74,5 @@ print(f"Erreur de discrétisation (norme L2) : {erreur_L2:.6e}")
 
 # Sauvegarde de l'erreur dans un fichier texte
 with open(os.path.join(chemin_data, f"erreur_L2_ {N} noeuds.txt"), "w") as f:
-    f.write(f"Erreur de discrétisation (norme L2) : {erreur_L2:.6e} \n")
+    f.write(f"Erreur de discretisation (norme L2) : {erreur_L2:.6e} \n")
     f.write(f"Nombre de noeuds : {N} \n")
