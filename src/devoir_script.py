@@ -19,7 +19,7 @@ R = 0.5  # Rayon du pilier (m)
 Ce = 20  # Concentration en surface (mol/m³)
 Deff = 1e-10  # Coefficient de diffusion (m²/s)
 S = 2e-8  # Terme source constant (mol/m³/s)
-N = 10  # Nombre de nœuds
+N = 360  # Nombre de nœuds
 dr = R / (N - 1)  # Pas spatial
 
 # Discrétisation spatiale
