@@ -25,10 +25,10 @@ b = np.zeros(N)
 
 # Remplissage des équations internes
 for i in range(1, N-1):
-    A[i, i-1] = 1 / dr**2 - 1 / (r[i] * 2 * dr)
-    A[i, i] = -2 / dr**2
-    A[i, i+1] = 1 / dr**2 + 1 / (r[i] * 2 * dr)
-    b[i] = -S / Deff
+    A[i, i-1] = 1 / dr**2
+    A[i, i] = -2 / dr**2 - 1/(r[i]*dr)
+    A[i, i+1] = 1 / dr**2 + 1 / (r[i] * dr)
+    b[i] = S / Deff
 
 # Condition aux limites à r = 0 (symétrie)
 A[0, 0] = -3 / dr**2
