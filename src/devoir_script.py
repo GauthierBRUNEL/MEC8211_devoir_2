@@ -2,7 +2,7 @@
 """
 Created on Mon Feb  3 19:42:39 2025
 
-@author: fgley
+@author: fgley, gbrun
 """
 
 import numpy as np
@@ -19,7 +19,7 @@ R = 0.5  # Rayon du pilier (m)
 Ce = 20  # Concentration en surface (mol/m³)
 Deff = 1e-10  # Coefficient de diffusion (m²/s)
 S = 2e-8  # Terme source constant (mol/m³/s)
-N = 25  # Nombre de nœuds
+N = 5  # Nombre de nœuds
 dr = R / (N - 1)  # Pas spatial
 
 # Discrétisation spatiale
@@ -30,11 +30,20 @@ A = np.zeros((N, N))
 b = np.zeros(N)
 
 # Remplissage des équations internes
-for i in range(1, N-1):
-    A[i, i-1] = 1 / dr**2
-    A[i, i] = -2 / dr**2 - 1/(r[i]*dr)
-    A[i, i+1] = 1 / dr**2 + 1 / (r[i] * dr)
-    b[i] = S / Deff
+case = 2
+
+if case == 1 : # QUESTION C
+    for i in range(1, N-1):
+        A[i, i-1] = 1 / dr**2
+        A[i, i] = -2 / dr**2 - 1/(r[i]*dr)
+        A[i, i+1] = 1 / dr**2 + 1 / (r[i] * dr)
+        b[i] = S / Deff
+elif case ==2 : # QUESTION E
+    for i in range(1, N-1):
+        A[i, i-1] = 1 / dr**2 - 1 / (r[i] * dr)
+        A[i, i] = -2 / dr**2 
+        A[i, i+1] = 1 / dr**2 + 1 / (r[i] * dr)
+        b[i] = S / Deff
 
 # Condition aux limites à r = 0 (symétrie)
 A[0, 0] = -1
@@ -66,13 +75,20 @@ plt.show()
 plt.savefig(os.path.join(chemin_resultats, f"profil_concentration pour maillage avec {N} noeuds.png"), dpi=300)
 plt.show()
 
-# Calcul de l'erreur L2
+# Calcul de l'erreur L1, L2, Linf
 erreur_L2 = np.sqrt(np.sum((C_numerique - C_analytique) ** 2) * dr)
+erreur_L1 = np.sum(np.abs(C_numerique - C_analytique)) * dr
+erreur_Linf = np.max(np.abs(C_numerique - C_analytique))
 
 # Affichage de l'erreur
+print(f"Erreur de discrétisation (norme L1) : {erreur_L1:.6e}")
 print(f"Erreur de discrétisation (norme L2) : {erreur_L2:.6e}")
+print(f"Erreur de discrétisation (norme Linfini) : {erreur_Linf:.6e}")
+
 
 # Sauvegarde de l'erreur dans un fichier texte
-with open(os.path.join(chemin_data, f"erreur_L2_ {N} noeuds.txt"), "w") as f:
-    f.write(f"{erreur_L2:.6e} \n")
-    f.write(f"{N} \n")
+with open(os.path.join(chemin_data, f"erreur_ {N} noeuds.txt"), "w") as f:
+    f.write(f"Erreur L1 : {erreur_L1:.6e} \n")
+    f.write(f"Erreur L2 : {erreur_L2:.6e} \n")
+    f.write(f"Erreur Linfini : {erreur_Linf:.6e} \n")
+    f.write(f"Nombre de nœuds : {N} \n")
