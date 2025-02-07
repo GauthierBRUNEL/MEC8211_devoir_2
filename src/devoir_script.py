@@ -6,7 +6,7 @@ Created on Mon Feb  3 19:42:39 2025
 """
 
 import numpy as np
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 import os
 
 # Création des dossiers si inexistants
@@ -19,76 +19,95 @@ R = 0.5  # Rayon du pilier (m)
 Ce = 20  # Concentration en surface (mol/m³)
 Deff = 1e-10  # Coefficient de diffusion (m²/s)
 S = 2e-8  # Terme source constant (mol/m³/s)
-N = 5  # Nombre de nœuds
-dr = R / (N - 1)  # Pas spatial
 
-# Discrétisation spatiale
-r = np.linspace(0, R, N)
+# Définir un vecteur de valeurs pour N (nombre de nœuds)
+vecteur_N = [5, 10, 20, 50, 100, 200, 300, 500]  # Exemple de valeurs
 
-# Construction du système linéaire matriciel Ax = b
-A = np.zeros((N, N))
-b = np.zeros(N)
+# Types d'approximation
+types_approximation = {
+    1: "premier_type",
+    2: "second_type"
+}
 
-# Remplissage des équations internes
-case = 2
+for case, type_approx in types_approximation.items():
+    for N in vecteur_N:
+        dr = R / (N - 1)  # Pas spatial
 
-if case == 1 : # QUESTION C
-    for i in range(1, N-1):
-        A[i, i-1] = 1 / dr**2
-        A[i, i] = -2 / dr**2 - 1/(r[i]*dr)
-        A[i, i+1] = 1 / dr**2 + 1 / (r[i] * dr)
-        b[i] = S / Deff
-elif case ==2 : # QUESTION E
-    for i in range(1, N-1):
-        A[i, i-1] = 1 / dr**2 - 1 / (r[i] * dr)
-        A[i, i] = -2 / dr**2 
-        A[i, i+1] = 1 / dr**2 + 1 / (r[i] * dr)
-        b[i] = S / Deff
+        # Discrétisation spatiale (pour la solution numérique)
+        r_numerique = np.linspace(0, R, N)
 
-# Condition aux limites à r = 0 (symétrie)
-A[0, 0] = -1
-A[0, 1] = 1
-b[0] = 0  # dC/dr = 0 en r=0
+        # Construction du système linéaire matriciel Ax = b
+        A = np.zeros((N, N))
+        b = np.zeros(N)
 
-# Condition aux limites à r = R (C = Ce)
-A[N-1, N-1] = 1
-b[N-1] = Ce
+        # Remplissage des équations internes
+        if case == 1:  # QUESTION C
+            for i in range(1, N-1):
+                A[i, i-1] = 1 / dr**2
+                A[i, i] = -2 / dr**2 - 1/(r_numerique[i]*dr)
+                A[i, i+1] = 1 / dr**2 + 1 / (r_numerique[i] * dr)
+                b[i] = S / Deff
+        elif case == 2:  # QUESTION E
+            for i in range(1, N-1):
+                A[i, i-1] = 1 / dr**2 - 1 / (2*r_numerique[i] * dr)
+                A[i, i] = -2 / dr**2
+                A[i, i+1] = 1 / dr**2 + 1 / (2*r_numerique[i] * dr)
+                b[i] = S / Deff
 
-# Résolution du système linéaire
-C_numerique = np.linalg.solve(A, b)
+        # Condition aux limites à r = 0 (symétrie)
+        A[0, 0] = -1
+        A[0, 1] = 1
+        b[0] = 0  # dC/dr = 0 en r=0
 
-# Solution analytique
-C_analytique = (S / (4 * Deff) * R**2) * ((r**2 / R**2) - 1) + Ce
+        # Condition aux limites à r = R (C = Ce)
+        A[N-1, N-1] = 1
+        b[N-1] = Ce
 
-# Tracé des résultats
-plt.figure(figsize=(8, 6))
-plt.plot(r, C_numerique, 'o-', label="Solution numérique")
-plt.plot(r, C_analytique, 'o-', label="Solution analytique")
-plt.xlabel("Rayon (m)")
-plt.ylabel("Concentration (mol/m³)")
-plt.legend()
-plt.grid()
-plt.title("Profil de concentration du sel dans le pilier")
-plt.show()
+        # Résolution du système linéaire
+        C_numerique = np.linalg.solve(A, b)
 
-# Sauvegarde de la figure dans le bon dossier
-plt.savefig(os.path.join(chemin_resultats, f"profil_concentration pour maillage avec {N} noeuds.png"), dpi=300)
-plt.show()
+        # Création du maillage combiné pour la solution analytique
+        points_par_segment = 5  # Nombre de points entre les points du maillage numérique
+        r_analytique = []
+        for i in range(len(r_numerique) - 1):
+            r_segment = np.linspace(r_numerique[i], r_numerique[i+1], points_par_segment + 1)
+            r_analytique.extend(r_segment[:-1])  # Exclure le dernier point pour éviter les doublons
+        r_analytique.append(r_numerique[-1])  # Ajouter le dernier point
 
-# Calcul de l'erreur L1, L2, Linf
-erreur_L2 = np.sqrt(np.sum((C_numerique - C_analytique) ** 2) * dr)
-erreur_L1 = np.sum(np.abs(C_numerique - C_analytique)) * dr
-erreur_Linf = np.max(np.abs(C_numerique - C_analytique))
+        r_analytique = np.array(r_analytique)
 
-# Affichage de l'erreur
-print(f"Erreur de discrétisation (norme L1) : {erreur_L1:.6e}")
-print(f"Erreur de discrétisation (norme L2) : {erreur_L2:.6e}")
-print(f"Erreur de discrétisation (norme Linfini) : {erreur_Linf:.6e}")
+        # Solution analytique (évaluée sur le vecteur combiné)
+        C_analytique = (S / (4 * Deff) * R**2) * ((r_analytique**2 / R**2) - 1) + Ce
 
+        # Tracé des résultats
+        plt.figure(figsize=(8, 6))
+        plt.plot(r_numerique, C_numerique, 'o', markersize=3, label="Solution numérique")  # Points pour la solution numérique
+        plt.plot(r_analytique, C_analytique, '-', linewidth=1, label="Solution analytique")  # Ligne continue pour la solution analytique
+        plt.xlabel("Rayon (m)")
+        plt.ylabel("Concentration (mol/m³)")
+        plt.legend()
+        plt.grid()
+        plt.title(f"Profil de concentration du sel dans le pilier (N={N}, {type_approx})")
+        #plt.show()
 
-# Sauvegarde de l'erreur dans un fichier texte
-with open(os.path.join(chemin_data, f"erreur_ {N} noeuds.txt"), "w") as f:
-    f.write(f"Erreur L1 : {erreur_L1:.6e} \n")
-    f.write(f"Erreur L2 : {erreur_L2:.6e} \n")
-    f.write(f"Erreur Linfini : {erreur_Linf:.6e} \n")
-    f.write(f"Nombre de nœuds : {N} \n")
+        # Sauvegarde de la figure dans le bon dossier
+        plt.savefig(os.path.join(chemin_resultats, f"profil_concentration_pour_maillage_avec_{N}_noeuds_{type_approx}.png"), dpi=300)
+        plt.close('all')
+
+        # Calcul de l'erreur L1, L2, Linf (sans interpolation !)
+        C_analytique_numerique_points = (S / (4 * Deff) * R**2) * ((r_numerique**2 / R**2) - 1) + Ce
+        erreur_L2 = np.sqrt(np.sum((C_numerique - C_analytique_numerique_points) ** 2) * dr)
+        erreur_L1 = np.sum(np.abs(C_numerique - C_analytique_numerique_points)) * dr
+        erreur_Linf = np.max(np.abs(C_numerique - C_analytique_numerique_points))
+
+        # Affichage de l'erreur
+        print(f"Erreur de discrétisation (norme L1) pour N={N}, {type_approx} : {erreur_L1:.6e}")
+        print(f"Erreur de discrétisation (norme L2) pour N={N}, {type_approx} : {erreur_L2:.6e}")
+        print(f"Erreur de discrétisation (norme Linfini) pour N={N}, {type_approx} : {erreur_Linf:.6e}")
+
+        # Sauvegarde de l'erreur dans un fichier texte
+        with open(os.path.join(chemin_data, f"erreur_{N}_noeuds_{type_approx}.txt"), "w") as f:
+            f.write(f"Erreur L1 : {erreur_L1:.6e} \n")
+            f.write(f"Erreur L2 : {erreur_L2:.6e} \n")
+            f.write(f"Erreur Linfini : {erreur_Linf:.6e} \n")
+            f.write(f"Nombre de nœuds : {N} \n")
