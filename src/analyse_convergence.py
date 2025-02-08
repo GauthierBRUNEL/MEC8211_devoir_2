@@ -1,3 +1,23 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Feb  3 19:42:39 2025
+
+@author: fgley, gbrun, cflor
+
+Objectif :
+Ce script charge des fichiers contenant des erreurs numériques pour différents maillages
+et réalise une analyse de convergence. Il effectue une régression linéaire sur les erreurs
+en fonction de la taille du maillage (dr) en échelle logarithmique et génère des graphiques
+montrant l'évolution des erreurs (L1, L2, Linf) pour différents types d'approximation.
+
+Résultats produits :
+- Calcul des ordres de convergence estimés pour chaque norme d'erreur.
+- Graphiques de convergence individuels et comparatifs enregistrés au format PNG.
+
+Auteur : [Ton Nom]
+Date : [Date de création ou de dernière modification]
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -79,7 +99,7 @@ for type_approx in types_approximation:
         if len(drs_interp) > 1:  # Vérification pour éviter une erreur si pas assez de points
             # Régression linéaire AVEC dr
             slope, intercept, r_value, p_value, std_err = linregress(np.log(drs_interp), np.log(erreurs_interp))
-            label_slope = f"Ordre de convergence : {slope:.4f}"
+            label_slope = f"Ordre de convergence : {slope:.6f}"
         else:
             slope, intercept = None, None
             label_slope = "Pas assez de points pour interpolation"
@@ -105,7 +125,7 @@ for type_approx in types_approximation:
 
         # Affichage des résultats
         if slope is not None:
-            print(f"Ordre de convergence estimé pour {norme}, {type_approx} : {slope:.4f}")
+            print(f"Ordre de convergence estimé pour {norme}, {type_approx} : {slope:.6f}")
         else:
             print(f"Pas assez de points avec mesh_size > 15 pour interpoler {norme}, {type_approx}")
 
@@ -136,7 +156,7 @@ for type_approx in types_approximation:
             slope, intercept, _, _, _ = linregress(np.log(drs_interp), np.log(erreurs_interp))  # Utiliser dr
             mesh_fit = np.linspace(min(drs_interp), max(drs_interp), 100)  # Création d'un axe pour la droite
             erreur_fit = np.exp(intercept) * mesh_fit**slope  # Reconstruction de la droite en échelle normale
-            plt.plot(mesh_fit, erreur_fit, '--', color=couleurs[norme], label=f"{norme} (ordre: {slope:.4f})")
+            plt.plot(mesh_fit, erreur_fit, '--', color=couleurs[norme], label=f"{norme} (ordre: {slope:.6f})")
 
     plt.xlabel("Taille du maillage (dr)") # Changer le label
     plt.ylabel("Erreurs")
