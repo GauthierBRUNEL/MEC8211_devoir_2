@@ -1,4 +1,4 @@
-Erreur L1 : 1.2652972e-05 
-Erreur L2 : 2.5517172e-05 
-Erreur Linfini : 2.0522307e-04 
+Erreur L1 : 7.9811019e-13 
+Erreur L2 : 2.0287506e-12 
+Erreur Linfini : 2.3454128e-11 
 Nombre de nœuds : 500 

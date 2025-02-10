@@ -63,6 +63,12 @@ for case, type_approx in types_approximation.items():
                 A[i, i] = -2 / dr**2 - 1/(r_numerique[i]*dr)
                 A[i, i+1] = 1 / dr**2 + 1 / (r_numerique[i] * dr)
                 b[i] = S / Deff
+                
+            # Condition aux limites à r = 0 (symétrie)
+            A[0, 0] = -1
+            A[0, 1] = 1
+            b[0] = 0  # dC/dr = 0 en r=0
+            
         elif case == 2:  # QUESTION E
             for i in range(1, N-1):
                 A[i, i-1] = 1 / dr**2 - 1 / (2*r_numerique[i] * dr)
@@ -70,10 +76,11 @@ for case, type_approx in types_approximation.items():
                 A[i, i+1] = 1 / dr**2 + 1 / (2*r_numerique[i] * dr)
                 b[i] = S / Deff
 
-        # Condition aux limites à r = 0 (symétrie)
-        A[0, 0] = -1
-        A[0, 1] = 1
-        b[0] = 0  # dC/dr = 0 en r=0
+            # Condition aux limites à r = 0 (symétrie)
+            A[0, 0] = -3
+            A[0, 1] = 4
+            A[0, 2] = -1
+            b[0] = 0  # dC/dr = 0 en r=0
 
         # Condition aux limites à r = R (C = Ce)
         A[N-1, N-1] = 1
