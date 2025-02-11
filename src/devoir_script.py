@@ -37,7 +37,7 @@ Deff = 1e-10  # Coefficient de diffusion (m²/s)
 S = 2e-8  # Terme source constant (mol/m³/s)
 
 # Définir un vecteur de valeurs pour N (nombre de nœuds)
-vecteur_N = [5, 10, 20, 50, 100, 200, 300, 500]  # Exemple de valeurs
+vecteur_N = [3, 4, 5, 10, 20, 50, 100, 200, 300, 500, 1000]  # Exemple de valeurs
 
 # Types d'approximation
 types_approximation = {
