@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import os
 
-
 # Chemins des dossiers
 chemin_base = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 chemin_resultats = os.path.join(chemin_base, "results")
@@ -23,13 +22,22 @@ Deff = 1e-10  # Coefficient de diffusion (m²/s)
 k = 4e-9  # Constante de réaction (s⁻¹)
 
 # Discrétisation
-N_list = [5, 10, 25, 50, 100]  # Nombre de nœuds spatiaux
-dt_list = [7 * 24 * 3600, 14 * 24 * 3600, 30 * 24 * 3600, 60 * 24 * 3600]  # Pas de temps (1 semaine, 2 semaines, 1 mois, 2 mois)
+N_list = [5]  # Nombre de nœuds spatiaux
+# N_list = [5, 10, 25, 50, 100]  # Nombre de nœuds spatiaux
+# dt_list = [7 * 24 * 3600, 14 * 24 * 3600, 30 * 24 * 3600, 60 * 24 * 3600]  # Pas de temps (1 semaine, 2 semaines, 1 mois, 2 mois)
+dt_list = [30 * 24 * 3600]  # Pas de temps (1 semaine, 2 semaines, 1 mois, 2 mois)
 t_final = 12 * 30 * 24 * 3600  # Temps final (1 an en secondes)
 
+Save_Data = True
+Save_Plot = True
+MMS       = True
 
-MMS = False
+#%% Fonctions 
 
+def MMS_Source_S(t,r) : 
+    S = (Ce / R**2) * np.exp(dt*t / t_final)*(r**2 / t_final  + (k * r**2 - 4 * Deff))
+    return S
+    
 def construire_matrices():
     global A, A_CN, B_CN
     for i in range(1, N-1):
@@ -77,7 +85,7 @@ def avancer_temps_euler():
         b[N-1] = Ce  # Condition de Dirichlet
         
         if MMS == True : 
-            S = (Ce / R**2) * np.exp(dt*t / t_final)*(r**2 / t_final  + (k * r**2 - 4 * Deff))
+            S = MMS_Source_S(t,r)
             b[1:N-1] += S[1:N-1]  # Ajout du terme source
             b[N-1] = Ce * np.exp(dt*t / t_final)  # Nouvelle condition de Dirichlet
    
@@ -92,14 +100,17 @@ def avancer_temps_euler():
             # print(f"Avancement temporel : {t*dt/t_final*100:.2f}%")
             plt.plot(r, C, label=f"Euler t = {t*dt/3600/24/30 + 1:.0f} mois", color=colormap(t / int(t_final / dt)))
     
-    plt.xlabel("Rayon (m)")
-    plt.ylabel("Concentration (mol/m³)")
-    plt.legend()
-    plt.grid()
-    plt.title(f"Évolution de la concentration avec Euler (N={N}, dt={dt//(24*3600)} jours)")
-    nom_fichier = f"Euler_N{N}_dt{dt//(24*3600)}j.png"
-    plt.savefig(os.path.join(chemin_resultats, nom_fichier))
+    if Save_Plot == True: 
+        plt.xlabel("Rayon (m)")
+        plt.ylabel("Concentration (mol/m³)")
+        plt.legend()
+        plt.grid()
+        plt.title(f"Évolution de la concentration avec Euler (N={N}, dt={dt//(24*3600)} jours)")
+        if Save_Data == True : 
+            nom_fichier = f"Euler_N{N}_dt{dt//(24*3600)}j.png"
+            plt.savefig(os.path.join(chemin_resultats, nom_fichier))
     plt.close()
+        
     return C_temps
 
 def avancer_temps_crank_nicholson():
@@ -119,7 +130,7 @@ def avancer_temps_crank_nicholson():
         b_CN[N-1] = Ce  # Condition de Dirichlet
         
         if MMS == True : 
-            S = (Ce / R**2) * np.exp(dt*t / t_final)*(r**2 / t_final  + (k * r**2 - 4 * Deff))
+            S = MMS_Source_S(t,r)
             b_CN[1:N-1] += S[1:N-1] / dt # Ajout du terme source
             b_CN[N-1] = Ce * np.exp(dt*t / t_final)  # Nouvelle condition de Dirichlet
             
@@ -134,13 +145,15 @@ def avancer_temps_crank_nicholson():
             # print(f"Avancement temporel : {t*dt/t_final*100:.2f}%")
             plt.plot(r, C, label=f"Crank-Nicholson t = {t*dt/3600/24/30 + 1:.0f} mois", color=colormap(t / int(t_final / dt)))
     
-    plt.xlabel("Rayon (m)")
-    plt.ylabel("Concentration (mol/m³)")
-    plt.legend()
-    plt.grid()
-    plt.title(f"Évolution de la concentration avec Crank-Nicholson (N={N}, dt={dt//(24*3600)} jours)")
-    nom_fichier = f"CrankNicholson_N{N}_dt{dt//(24*3600)}j.png"
-    plt.savefig(os.path.join(chemin_resultats, nom_fichier))
+    if Save_Plot == True : 
+        plt.xlabel("Rayon (m)")
+        plt.ylabel("Concentration (mol/m³)")
+        plt.legend()
+        plt.grid()
+        plt.title(f"Évolution de la concentration avec Crank-Nicholson (N={N}, dt={dt//(24*3600)} jours)")
+        if Save_Data == True : 
+            nom_fichier = f"CrankNicholson_N{N}_dt{dt//(24*3600)}j.png"
+            plt.savefig(os.path.join(chemin_resultats, nom_fichier))
     plt.close()
 
     return C_temps
@@ -153,7 +166,7 @@ def MMS_Calcul():
             C_temps[t, :] = C_hat 
     return C_temps
 
-# Exécution
+#%% Exécution
 
 # Dictionnaire pour stocker les résultats
 results = {}
