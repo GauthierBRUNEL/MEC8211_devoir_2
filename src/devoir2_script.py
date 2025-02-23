@@ -8,7 +8,13 @@ Created on Sat Feb 22 08:57:48 2025
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import os
 
+
+# Chemins des dossiers
+chemin_base = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+chemin_resultats = os.path.join(chemin_base, "results")
+chemin_data = os.path.join(chemin_base, "data")
 
 # Paramètres du problème
 R = 0.5  # Rayon du pilier (m)
@@ -17,23 +23,12 @@ Deff = 1e-10  # Coefficient de diffusion (m²/s)
 k = 4e-9  # Constante de réaction (s⁻¹)
 
 # Discrétisation
-N = 50  # Nombre de nœuds spatiaux
-dt = 30 * 24 * 3600  # Pas de temps (1 mois en secondes)
-t_final = 12 * dt  # Temps final (1 an en secondes)
+N_list = [5, 10, 25, 50, 100]  # Nombre de nœuds spatiaux
+dt_list = [7 * 24 * 3600, 14 * 24 * 3600, 30 * 24 * 3600, 60 * 24 * 3600]  # Pas de temps (1 semaine, 2 semaines, 1 mois, 2 mois)
+t_final = 12 * 30 * 24 * 3600  # Temps final (1 an en secondes)
 
-r = np.linspace(0, R, N)
-dr = R / (N - 1)
-C = np.zeros(N)  # Condition initiale : C(r, 0) = 0
 
-# Matrice du schéma d'Euler implicite
-A = np.zeros((N, N))
-b = np.zeros(N)
-
-# Matrice du schéma de Crank-Nicholson
-A_CN = np.zeros((N, N))
-B_CN = np.zeros((N, N))
-
-MMS = True
+MMS = False
 
 def construire_matrices():
     global A, A_CN, B_CN
@@ -94,15 +89,17 @@ def avancer_temps_euler():
         C_temps[t, :] = C  # Stocke l'évolution
         
         if t % 1 == 0:  # Affichage pour chaque mois
-            print(f"Avancement temporel : {t*dt/t_final*100:.2f}%")
+            # print(f"Avancement temporel : {t*dt/t_final*100:.2f}%")
             plt.plot(r, C, label=f"Euler t = {t*dt/3600/24/30 + 1:.0f} mois", color=colormap(t / int(t_final / dt)))
     
     plt.xlabel("Rayon (m)")
     plt.ylabel("Concentration (mol/m³)")
     plt.legend()
     plt.grid()
-    plt.title("Évolution de la concentration avec Euler (1 an)")
-    plt.show()
+    plt.title(f"Évolution de la concentration avec Euler (N={N}, dt={dt//(24*3600)} jours)")
+    nom_fichier = f"Euler_N{N}_dt{dt//(24*3600)}j.png"
+    plt.savefig(os.path.join(chemin_resultats, nom_fichier))
+    plt.close()
     return C_temps
 
 def avancer_temps_crank_nicholson():
@@ -134,15 +131,18 @@ def avancer_temps_crank_nicholson():
         C_temps[t, :] = C  # Stocke l'évolution
         
         if t % 1 == 0:  # Affichage pour chaque mois
-            print(f"Avancement temporel : {t*dt/t_final*100:.2f}%")
+            # print(f"Avancement temporel : {t*dt/t_final*100:.2f}%")
             plt.plot(r, C, label=f"Crank-Nicholson t = {t*dt/3600/24/30 + 1:.0f} mois", color=colormap(t / int(t_final / dt)))
     
     plt.xlabel("Rayon (m)")
     plt.ylabel("Concentration (mol/m³)")
     plt.legend()
     plt.grid()
-    plt.title("Évolution de la concentration avec Crank-Nicholson (1 an)")
-    plt.show()
+    plt.title(f"Évolution de la concentration avec Crank-Nicholson (N={N}, dt={dt//(24*3600)} jours)")
+    nom_fichier = f"CrankNicholson_N{N}_dt{dt//(24*3600)}j.png"
+    plt.savefig(os.path.join(chemin_resultats, nom_fichier))
+    plt.close()
+
     return C_temps
 
 def MMS_Calcul():
@@ -154,9 +154,44 @@ def MMS_Calcul():
     return C_temps
 
 # Exécution
-construire_matrices()
-C_euler = avancer_temps_euler()
-C_crank_nicholson = avancer_temps_crank_nicholson()
+
+# Dictionnaire pour stocker les résultats
+results = {}
+
+for N in N_list:
+    r = np.linspace(0, R, N)
+    dr = R / (N - 1)
+    C = np.zeros(N)  # Condition initiale : C(r, 0) = 0
+    
+    # Matrice du schéma d'Euler implicite
+    A = np.zeros((N, N))
+    b = np.zeros(N)
+    
+    # Matrice du schéma de Crank-Nicholson
+    A_CN = np.zeros((N, N))
+    B_CN = np.zeros((N, N))
+    
+    for dt in dt_list:
+        # Stocker les résultats sous forme (N, dt)
+        key = f"N={N}, dt={dt/(24*3600)}j"
+        results[key] = {}
+        
+        # Construire les matrices pour cette configuration
+        construire_matrices()
+        
+        # Exécuter les calculs
+        C_euler = avancer_temps_euler()
+        C_crank_nicholson = avancer_temps_crank_nicholson()
+        
+        # Sauvegarde des résultats
+        results[key]["Euler"] = C_euler
+        results[key]["Crank-Nicholson"] = C_crank_nicholson
+        
+        nom_fichier_euler = f"Euler_N{N}_dt{dt//(24*3600)}j.txt"
+        nom_fichier_cn = f"CrankNicholson_N{N}_dt{dt//(24*3600)}j.txt"
+    
+        np.savetxt(os.path.join(chemin_data, nom_fichier_euler), C_euler, delimiter=",", header="Évolution temporelle de la concentration (Euler)", comments="")
+        np.savetxt(os.path.join(chemin_data, nom_fichier_cn), C_crank_nicholson, delimiter=",", header="Évolution temporelle de la concentration (Crank-Nicholson)", comments="")
 
 
 #%% PLOT DIFF Euler & CN
@@ -213,4 +248,3 @@ if MMS == True :
     plt.grid()
     plt.title("Évolution de la différence entre Crank-Nicholson et la solution MMS")
     plt.show()
-    
