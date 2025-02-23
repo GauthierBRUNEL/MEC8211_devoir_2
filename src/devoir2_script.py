@@ -22,10 +22,8 @@ Deff = 1e-10  # Coefficient de diffusion (m²/s)
 k = 4e-9  # Constante de réaction (s⁻¹)
 
 # Discrétisation
-N_list = [5]  # Nombre de nœuds spatiaux
-# N_list = [5, 10, 25, 50, 100]  # Nombre de nœuds spatiaux
-# dt_list = [7 * 24 * 3600, 14 * 24 * 3600, 30 * 24 * 3600, 60 * 24 * 3600]  # Pas de temps (1 semaine, 2 semaines, 1 mois, 2 mois)
-dt_list = [30 * 24 * 3600]  # Pas de temps (1 semaine, 2 semaines, 1 mois, 2 mois)
+N_list = [5, 10, 25, 50, 100]  # Nombre de nœuds spatiaux
+dt_list = [7 * 24 * 3600, 14 * 24 * 3600, 30 * 24 * 3600, 60 * 24 * 3600]  # Pas de temps (1 semaine, 2 semaines, 1 mois, 2 mois)
 t_final = 12 * 30 * 24 * 3600  # Temps final (1 an en secondes)
 
 Save_Data = True
@@ -86,7 +84,7 @@ def avancer_temps_euler():
         
         if MMS == True : 
             S = MMS_Source_S(t,r)
-            b[1:N-1] += S[1:N-1]  # Ajout du terme source
+            b[1:N-1] += S[1:N-1]*dt  # Ajout du terme source
             b[N-1] = Ce * np.exp(dt*t / t_final)  # Nouvelle condition de Dirichlet
    
             C_hat = Ce*(r**2/R**2)*np.exp(dt*t / t_final)
@@ -131,7 +129,7 @@ def avancer_temps_crank_nicholson():
         
         if MMS == True : 
             S = MMS_Source_S(t,r)
-            b_CN[1:N-1] += S[1:N-1] / dt # Ajout du terme source
+            b_CN[1:N-1] += S[1:N-1] # Ajout du terme source
             b_CN[N-1] = Ce * np.exp(dt*t / t_final)  # Nouvelle condition de Dirichlet
             
             C_hat = Ce*(r**2/R**2)*np.exp(dt*t / t_final)
