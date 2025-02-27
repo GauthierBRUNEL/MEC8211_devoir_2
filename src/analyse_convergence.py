@@ -40,9 +40,9 @@ for N in N_list:
     
     for dt in dt_list:
         # Charger les fichiers
-        C_euler = np.loadtxt(os.path.join(chemin_data, f"C_euler_N{N}_dt{dt}.txt"))
-        C_crank_nicholson = np.loadtxt(os.path.join(chemin_data, f"C_crank_nicholson_N{N}_dt{dt}.txt"))
-        C_hat = np.loadtxt(os.path.join(chemin_data, f"C_hat_N{N}_dt{dt}.txt"))
+        C_euler = np.loadtxt(os.path.join(chemin_data, f"Euler_N{N}_dt{dt}.txt"), delimiter=",")
+        C_crank_nicholson = np.loadtxt(os.path.join(chemin_data, f"CrankNicholson_N{N}_dt{dt}.txt"), delimiter=",")
+        C_hat = np.loadtxt(os.path.join(chemin_data, f"C_hat_N{N}_dt{dt}.txt"), delimiter=",")
         
         # Calculer les erreurs pour Euler
         erreur_L1, erreur_L2, erreur_Linf = calculer_erreurs(C_euler[-1, :], C_hat[-1, :], dr)

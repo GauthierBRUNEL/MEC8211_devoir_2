@@ -22,9 +22,11 @@ Deff = 1e-10  # Coefficient de diffusion (m²/s)
 k = 4e-9  # Constante de réaction (s⁻¹)
 
 # Discrétisation
-N_list = [5, 10, 25, 50, 100]  # Nombre de nœuds spatiaux
-dt_list = [7 * 24 * 3600, 14 * 24 * 3600, 30 * 24 * 3600, 60 * 24 * 3600]  # Pas de temps (1 semaine, 2 semaines, 1 mois, 2 mois)
-t_final = 12 * 30 * 24 * 3600  # Temps final (1 an en secondes)
+N_list = [5]  # Nombre de nœuds spatiaux
+dt_list = [12 * 12 * 30 * 24 * 3600]  # Pas de temps : 1 mois, 6 mois, 1 an, 10 ans 
+# N_list = [5, 10, 25, 50, 100, 200]  # Nombre de nœuds spatiaux
+# dt_list = [6 * 30 * 24 * 3600, 12 * 30 * 24 * 3600, 10 * 12 * 30 * 24 * 3600]  # Pas de temps : 1 mois, 6 mois, 1 an, 10 ans 
+t_final = 12 * 30 * 24 * 3600 * 150  # Temps final (150 an en secondes)
 
 Save_Data = True
 Save_Plot = True
@@ -32,8 +34,8 @@ MMS       = True
 
 #%% Fonctions 
 
-def MMS_Source_S(t,r) : 
-    S = (Ce / R**2) * np.exp(dt*t / t_final)*(r**2 / t_final  + (k * r**2 - 4 * Deff))
+def MMS_Source_S(t,r,dt) : 
+    S = (Ce / R**2) * np.exp((t+1)*dt / t_final)*((r**2 + R**2) / t_final  + (k * r**2 - 4 * Deff))
     return S
     
 def construire_matrices():
@@ -70,7 +72,7 @@ def avancer_temps_euler():
     if MMS == False :
         C = np.zeros(N)
     else : 
-        C = np.full(N, Ce * (r**2 / R**2))
+        C = np.full(N, Ce * ((r**2  + R**2)/ R**2))
         
     C_temps = np.zeros((int(t_final / dt), N))  # Stocke toute l'évolution
     plt.figure(figsize=(8,6))
@@ -82,18 +84,17 @@ def avancer_temps_euler():
         b[0] = 0  # Condition de symétrie
         b[N-1] = Ce  # Condition de Dirichlet
         
+              
         if MMS == True : 
-            S = MMS_Source_S(t,r)
+            S = MMS_Source_S(t,r,dt)
             b[1:N-1] += S[1:N-1]*dt  # Ajout du terme source
-            b[N-1] = Ce * np.exp(dt*t / t_final)  # Nouvelle condition de Dirichlet
-   
-            C_hat = Ce*(r**2/R**2)*np.exp(dt*t / t_final)
+            b[N-1] = 2*Ce * np.exp(dt *(t+1)/ t_final)  # Nouvelle condition de Dirichlet
+            C_hat = Ce*((r**2 + R**2)/R**2)*np.exp(dt*(t+1) / t_final)
             plt.scatter(r, C_hat, label=f"C_hat = {t*dt/3600/24/30 + 1:.0f} mois", color=colormap2(t / int(t_final / dt)))
-
-        
+                     
         C = np.linalg.solve(A, b)  # Résolution du système linéaire
         C_temps[t, :] = C  # Stocke l'évolution
-        
+
         if t % 1 == 0:  # Affichage pour chaque mois
             # print(f"Avancement temporel : {t*dt/t_final*100:.2f}%")
             plt.plot(r, C, label=f"Euler t = {t*dt/3600/24/30 + 1:.0f} mois", color=colormap(t / int(t_final / dt)))
@@ -116,7 +117,7 @@ def avancer_temps_crank_nicholson():
     if MMS == False :
         C = np.zeros(N)
     else : 
-        C = np.full(N, Ce * (r**2 / R**2))
+        C = np.full(N, Ce * ((r**2  + R**2)/ R**2))
         
     C_temps = np.zeros((int(t_final / dt), N))  # Stocke toute l'évolution
     plt.figure(figsize=(8,6))
@@ -128,11 +129,11 @@ def avancer_temps_crank_nicholson():
         b_CN[N-1] = Ce  # Condition de Dirichlet
         
         if MMS == True : 
-            S = MMS_Source_S(t,r)
+            S = MMS_Source_S(t,r,dt)
             b_CN[1:N-1] += S[1:N-1] # Ajout du terme source
-            b_CN[N-1] = Ce * np.exp(dt*t / t_final)  # Nouvelle condition de Dirichlet
+            b_CN[N-1] = 2*Ce * np.exp(dt*(t+1)/ t_final)  # Nouvelle condition de Dirichlet
             
-            C_hat = Ce*(r**2/R**2)*np.exp(dt*t / t_final)
+            C_hat = Ce*((r**2 + R**2)/R**2)*np.exp(dt*(t+1) / t_final)
             plt.scatter(r, C_hat, label=f"C_hat = {t*dt/3600/24/30 + 1:.0f} mois", color=colormap2(t / int(t_final / dt)))
 
         
@@ -159,8 +160,7 @@ def avancer_temps_crank_nicholson():
 def MMS_Calcul():
     C_temps = np.zeros((int(t_final / dt), N))
     for t in range(int(t_final / dt)):
-            # C_hat = (Ce / R**2) * np.exp(dt*t / t_final)*(r**2 / t_final  + (k * r**2 - 4 * Deff))
-            C_hat = Ce*(r**2/R**2)*np.exp(dt*t / t_final)
+            C_hat = Ce*((r**2 + R**2)/R**2)*np.exp(dt*(t+1) / t_final)
             C_temps[t, :] = C_hat 
     return C_temps
 
@@ -193,16 +193,23 @@ for N in N_list:
         # Exécuter les calculs
         C_euler = avancer_temps_euler()
         C_crank_nicholson = avancer_temps_crank_nicholson()
+        C_hat = MMS_Calcul()
         
         # Sauvegarde des résultats
         results[key]["Euler"] = C_euler
         results[key]["Crank-Nicholson"] = C_crank_nicholson
+        results[key]["C_hat"] = C_hat
         
-        nom_fichier_euler = f"Euler_N{N}_dt{dt//(24*3600)}j.txt"
-        nom_fichier_cn = f"CrankNicholson_N{N}_dt{dt//(24*3600)}j.txt"
+        nom_fichier_euler = f"Euler_N{N}_dt{dt}.txt"
+        nom_fichier_cn = f"CrankNicholson_N{N}_dt{dt}.txt"
+        nom_fichier_chat = f"C_hat_N{N}_dt{dt}.txt"
     
-        np.savetxt(os.path.join(chemin_data, nom_fichier_euler), C_euler, delimiter=",", header="Évolution temporelle de la concentration (Euler)", comments="")
-        np.savetxt(os.path.join(chemin_data, nom_fichier_cn), C_crank_nicholson, delimiter=",", header="Évolution temporelle de la concentration (Crank-Nicholson)", comments="")
+        np.savetxt(os.path.join(chemin_data, nom_fichier_euler), C_euler, delimiter=",",comments="")
+        np.savetxt(os.path.join(chemin_data, nom_fichier_cn), C_crank_nicholson, delimiter=",",  comments="")
+        np.savetxt(os.path.join(chemin_data, nom_fichier_chat), C_hat, delimiter=",", comments="")
+        # np.savetxt(os.path.join(chemin_data, nom_fichier_euler), C_euler, delimiter=",", header="Évolution temporelle de la concentration (Euler)", comments="")
+        # np.savetxt(os.path.join(chemin_data, nom_fichier_cn), C_crank_nicholson, delimiter=",", header="Évolution temporelle de la concentration (Crank-Nicholson)", comments="")
+        # np.savetxt(os.path.join(chemin_data, nom_fichier_chat), C_hat, delimiter=",", header="Évolution temporelle de la concentration (C_hat)", comments="")
 
 
 #%% PLOT DIFF Euler & CN
