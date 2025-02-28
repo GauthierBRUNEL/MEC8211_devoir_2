@@ -42,15 +42,15 @@ def construire_matrices():
     global A, A_CN, B_CN
     for i in range(1, N-1):
         A[i, i-1] = -dt*Deff / dr**2 + dt*Deff / (2 * r[i] * dr)
-        A[i, i] = 2 * dt*Deff / dr**2 + k + 1
+        A[i, i] = 2 * dt*Deff / dr**2 + k*dt + 1
         A[i, i+1] = - dt*Deff / dr**2 - dt*Deff / (2 * r[i] * dr)
         
         A_CN[i, i-1] = -0.5 * Deff / dr**2 + 0.5 * Deff / (2 * r[i] * dr)
-        A_CN[i, i] = 1/dt + k/dt + Deff / dr**2
+        A_CN[i, i] = 1/dt + k + Deff / dr**2
         A_CN[i, i+1] = -0.5 * Deff / dr**2 - 0.5 * Deff / (2 * r[i] * dr)
         
         B_CN[i, i-1] = 0.5 * Deff / dr**2 - 0.5 * Deff / (2 * r[i] * dr)
-        B_CN[i, i] = 1/dt - k/dt - Deff / dr**2
+        B_CN[i, i] = 1/dt - k - Deff / dr**2
         B_CN[i, i+1] = 0.5 * Deff / dr**2 + 0.5 * Deff / (2 * r[i] * dr)
     
     # Condition aux limites : symétrie à r=0
@@ -91,10 +91,10 @@ def avancer_temps_euler():
             b[N-1] = 2*Ce * np.exp(dt *(t+1)/ t_final)  # Nouvelle condition de Dirichlet
             C_hat = Ce*((r**2 + R**2)/R**2)*np.exp(dt*(t+1) / t_final)
             plt.scatter(r, C_hat, label=f"C_hat = {t*dt/3600/24/30 + 1:.0f} mois", color=colormap2(t / int(t_final / dt)))
-                     
+        
         C = np.linalg.solve(A, b)  # Résolution du système linéaire
         C_temps[t, :] = C  # Stocke l'évolution
-
+        print(C)
         if t % 1 == 0:  # Affichage pour chaque mois
             # print(f"Avancement temporel : {t*dt/t_final*100:.2f}%")
             plt.plot(r, C, label=f"Euler t = {t*dt/3600/24/30 + 1:.0f} mois", color=colormap(t / int(t_final / dt)))
