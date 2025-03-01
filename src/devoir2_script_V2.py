@@ -1,3 +1,29 @@
+"""
+Script de simulation de diffusion réactive dans un cylindre
+
+Ce script implémente la résolution numérique de l'équation de diffusion avec réaction chimique
+dans un domaine cylindrique. Deux méthodes numériques sont utilisées :
+    - Euler implicite
+    - Crank-Nicholson
+
+Les principales fonctionnalités incluent :
+    - Génération des matrices de discrétisation
+    - Résolution du système temporellement discretisé
+    - Comparaison avec une solution analytique (Méthode des Solutions Manufacturées - MMS)
+    - Sauvegarde des résultats et des graphiques
+
+Paramètres principaux :
+    - Rayon du cylindre (R)
+    - Concentration en surface (Ce)
+    - Coefficient de diffusion (Deff)
+    - Constante de réaction (k)
+    - Temps final de simulation (t_final)
+    - Nombre de points de discrétisation (N)
+    - Pas de temps (dt)
+    
+Les résultats sont sauvegardés dans le dossier "results" et les fichiers de données dans "data".
+"""
+
 import numpy as np
 import scipy.linalg as la
 import matplotlib.pyplot as plt

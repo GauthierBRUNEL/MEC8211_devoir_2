@@ -1,8 +1,15 @@
-# -*- coding: utf-8 -*-
 """
-Created on Fri Feb 28 13:21:04 2025
+Script d'analyse de convergence des méthodes numériques de diffusion réactive
 
-@author: fgley
+Ce script permet de :
+    - Lire les fichiers de résultats générés par les simulations (méthodes Euler, Crank-Nicholson et la solution analytique C_hat)
+    - Calculer les erreurs de convergence (normes L1, L2 et L∞) en comparant les solutions numériques aux solutions analytiques (si disponibles)
+    - Tracer et sauvegarder les courbes de convergence spatiale (pour un dt fixe) et temporelle (pour un dr fixe)
+
+Les résultats sont récupérés depuis le dossier "data" et les graphiques générés sont sauvegardés dans le dossier "results".
+
+Auteur : fgley
+Date de création : Fri Feb 28 13:21:04 2025
 """
 
 import os
@@ -156,7 +163,7 @@ def tracer_convergence(df_erreurs):
 
 # Exemple d'utilisation
 N_list = [4, 5, 6, 7, 8, 9,  10, 11, 20,  25,50,  100, 200, 500]
-dt_list = [ 7.884e8, 1.5768e8, 3.1536e7, 1.5768e7,(1.5768e7/6) ] #10 ans, 25 ans, 5 ans, 1 ans, 6 mois 
+dt_list = [ 7.884e8, 1.5768e8, 3.1536e7, 1.5768e7,(1.5768e7/6) ] 
 df_donnees = lire_donnees(N_list, dt_list)
 df_erreurs = calculer_erreurs(df_donnees)
 tracer_convergence(df_erreurs)
