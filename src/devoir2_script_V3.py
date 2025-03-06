@@ -15,7 +15,7 @@ import os
 
 #Définition des chemins
 chemin_base = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-chemin_resultats = r"C:\Users\User\OneDrive\Desktop\MEC8211\Devoir 2\resultats"
+chemin_resultats = os.path.join(chemin_base, "results")
 chemin_data = os.path.join(chemin_base, "data")
 
 #Création des dossiers si inexistants
